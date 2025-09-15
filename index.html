@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows 98 - NEXUS Terminal</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@300;400;500;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'MS Sans Serif', sans-serif;
+            font-size: 11px;
+            background: linear-gradient(45deg, #008080, #004040);
+            overflow: hidden;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* Desktop */
+        .desktop {
+            height: 100vh;
+            background: linear-gradient(45deg, #008080, #004040);
+            position: relative;
+            cursor: default;
+        }
+
+        /* Desktop Icons */
+        .desktop-icon {
+            position: absolute;
+            width: 70px;
+            text-align: center;
+            color: white;
+            font-size: 11px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .desktop-icon img {
+            width: 32px;
+            height: 32px;
+            margin-bottom: 4px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .desktop-icon.selected {
+            background: rgba(0, 0, 139, 0.5);
+            border: 1px dotted white;
+        }
+
+        .icon-my-computer { top: 20px; left: 20px; }
+        .icon-recycle-bin { top: 100px; left: 20px; }
+        .icon-network { top: 180px; left: 20px; }
+
+        /* Taskbar */
+        .taskbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 30px;
+            background: linear-gradient(to bottom, #c0c0c0, #808080);
+            border-top: 1px solid #dfdfdf;
+            display: flex;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .start-button {
+            height: 26px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            margin: 2px;
+            padding: 0;
+        }
+
+        .start-button img {
+            height: 26px;
+            width: auto;
+            display: block;
+        }
+
+        .start-button .fallback {
+            height: 26px;
+            padding: 0 15px;
+            background: linear-gradient(to bottom, #dfdfdf, #c0c0c0);
+            border: 2px outset #c0c0c0;
+            font-weight: bold;
+            display: none;
+            align-items: center;
+        }
+
+        .start-button:active img {
+            filter: brightness(0.9);
+        }
+
+        .start-button.pressed img {
+            filter: brightness(0.8);
+        }
+
+        .start-button:active .fallback {
+            border: 2px inset #c0c0c0;
+        }
+
+        .start-button.pressed .fallback {
+            border: 2px inset #c0c0c0;
+            background: linear-gradient(to bottom, #c0c0c0, #dfdfdf);
+        }
+
+        .taskbar-items {
+            flex: 1;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            padding-left: 5px;
+        }
+
+        .taskbar-item {
+            height: 22px;
+            padding: 0 10px;
+            background: linear-gradient(to bottom, #dfdfdf, #c0c0c0);
+            border: 1px outset #c0c0c0;
+            margin-right: 2px;
+            display: none;
+            align-items: center;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .taskbar-item.active {
+            display: flex;
+            border: 1px inset #c0c0c0;
+        }
+
+        .system-tray {
+            height: 100%;
+            background: linear-gradient(to bottom, #dfdfdf, #c0c0c0);
+            border: 1px inset #c0c0c0;
+            padding: 0 10px;
+            display: flex;
+            align-items: center;
+            min-width: 80px;
+            justify-content: center;
+            font-size: 11px;
+        }
+
+        /* Start Menu */
+        .start-menu {
+            position: fixed;
+            bottom: 30px;
+            left: 0;
+            width: 200px;
+            background: #c0c0c0;
+            border: 2px outset #c0c0c0;
+            display: none;
+            z-index: 1001;
+        }
+
+        .start-menu-header {
+            background: linear-gradient(90deg, #000080, #0000ff);
+            color: white;
+            padding: 8px;
+            font-weight: bold;
+            vertical-align: middle;
+            display: flex;
+            align-items: center;
+        }
+
+        .start-menu-items {
+            padding: 2px;
+        }
+
+        .start-menu-item {
+            padding: 6px 25px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .start-menu-item:hover {
+            background: #000080;
+            color: white;
+        }
+
+        .start-menu-separator {
+            height: 1px;
+            background: #808080;
+            margin: 2px 0;
+        }
+
+        /* Terminal Window */
+        .terminal-window {
+            position: fixed;
+            top: 50px;
+            left: 50px;
+            width: 80%;
+            height: 70%;
+            background: #c0c0c0;
+            border: 2px outset #c0c0c0;
+            display: none;
+            flex-direction: column;
+            z-index: 999;
+            min-width: 600px;
+            min-height: 400px;
+            resize: both;
+            overflow: hidden;
+        }
+
+        .terminal-window.maximized {
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: calc(100% - 30px) !important;
+            resize: none;
+        }
+
+        .window-title-bar {
+            height: 20px;
+            background: linear-gradient(90deg, #000080, #0000ff);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 4px;
+            cursor: move;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .window-title {
+            display: flex;
+            align-items: center;
+        }
+
+        .window-title img {
+            width: 16px;
+            height: 16px;
+            margin-right: 4px;
+        }
+
+        .window-controls {
+            display: flex;
+        }
+
+        .window-control {
+            width: 16px;
+            height: 14px;
+            background: #c0c0c0;
+            border: 1px outset #c0c0c0;
+            margin-left: 2px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            font-weight: bold;
+            color: black;
+        }
+
+        .window-control:active {
+            border: 1px inset #c0c0c0;
+        }
+
+        /* Terminal Content */
+        .terminal-content-wrapper {
+            flex: 1;
+            background: #000;
+            border: 2px inset #c0c0c0;
+            margin: 2px;
+            font-family: 'Source Code Pro', monospace;
+            color: #00ff41;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Matrix rain background */
+        #matrix-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            opacity: 0.1;
+        }
+
+        .terminal-header {
+            background: linear-gradient(90deg, #001100, #003300);
+            border-bottom: 2px solid #00ff41;
+            padding: 8px 15px;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 255, 65, 0.3);
+            position: relative;
+            z-index: 2;
+        }
+
+        .terminal-title {
+            color: #00ff41;
+            font-weight: 700;
+            text-shadow: 0 0 10px #00ff41;
+        }
+
+        .system-status {
+            display: flex;
+            gap: 20px;
+            font-size: 12px;
+        }
+
+        .status-item {
+            color: #00cc33;
+        }
+
+        .terminal-body {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.9);
+            position: relative;
+            z-index: 2;
+        }
+
+        .terminal-content {
+            height: 100%;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .output-line {
+            margin: 2px 0;
+            white-space: pre-wrap;
+        }
+
+        .input-line {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+
+        .prompt {
+            color: #00ff41;
+            margin-right: 8px;
+            text-shadow: 0 0 5px #00ff41;
+            font-weight: 500;
+        }
+
+        #command-input {
+            background: transparent;
+            border: none;
+            color: #00ff41;
+            font-family: inherit;
+            font-size: inherit;
+            outline: none;
+            flex: 1;
+            caret-color: #00ff41;
+        }
+
+        .cursor {
+            display: inline-block;
+            background: #00ff41;
+            width: 8px;
+            height: 16px;
+            animation: blink 1s infinite;
+            margin-left: 2px;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .error { color: #ff4444; }
+        .warning { color: #ffaa00; }
+        .success { color: #44ff44; }
+        .info { color: #4488ff; }
+        .puzzle { color: #ff44ff; }
+
+        .glitch {
+            animation: glitch 0.3s ease-in-out;
+        }
+
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 16px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #c0c0c0;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #808080;
+            border: 1px outset #c0c0c0;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #606060;
+        }
+
+        ::-webkit-scrollbar-button {
+            background: #c0c0c0;
+            border: 1px outset #c0c0c0;
+            height: 16px;
+        }
+
+        /* Clock */
+        .clock {
+            font-size: 11px;
+            font-weight: normal;
+        }
+    </style>
+</head>
+<body>
+    <div class="desktop" id="desktop">
+        <!-- Desktop Icons -->
+        <div class="desktop-icon icon-my-computer" data-icon="my-computer">
+            <img src="my-computer.png" alt="My Computer" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div style="width: 32px; height: 32px; background: #c0c0c0; border: 1px outset #c0c0c0; margin: 0 auto 4px; display: none; align-items: center; justify-content: center; font-size: 16px;">💻</div>
+            My Computer
+        </div>
+        
+        <div class="desktop-icon icon-recycle-bin" data-icon="recycle-bin">
+            <img src="recycle-bin.png" alt="Recycle Bin" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div style="width: 32px; height: 32px; background: #c0c0c0; border: 1px outset #c0c0c0; margin: 0 auto 4px; display: none; align-items: center; justify-content: center; font-size: 16px;">🗑️</div>
+            Recycle Bin
+        </div>
+        
+        <div class="desktop-icon icon-network" data-icon="network">
+            <img src="network.png" alt="Network" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div style="width: 32px; height: 32px; background: #c0c0c0; border: 1px outset #c0c0c0; margin: 0 auto 4px; display: none; align-items: center; justify-content: center; font-size: 16px;">🌐</div>
+            Network
+        </div>
+    </div>
+
+    <!-- Taskbar -->
+    <div class="taskbar">
+        <div class="start-button" id="start-button">
+            <img src="./start-button.png" alt="Start" onload="this.nextElementSibling.style.display='none';" onerror="console.log('Start button PNG failed to load'); this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="fallback">
+                <span style="margin-right: 8px;">🪟</span>Start
+            </div>
+        </div>
+        
+        <div class="taskbar-items">
+            <div class="taskbar-item" id="terminal-taskbar-item">
+                <img src="terminal.png" alt="Terminal" style="width: 16px; height: 16px; margin-right: 4px;" onerror="this.style.display='none';">
+                <span style="margin-left: 4px;">💻</span>NEXUS Terminal
+            </div>
+        </div>
+        
+        <div class="system-tray">
+            <div class="clock" id="clock">12:00 PM</div>
+        </div>
+    </div>
+
+    <!-- Start Menu -->
+    <div class="start-menu" id="start-menu">
+        <div class="start-menu-header">
+            Windows 98
+        </div>
+        <div class="start-menu-items">
+            <div class="start-menu-item" data-action="programs">
+                <img src="programs.png" alt="Programs" style="width: 16px; height: 16px; margin-right: 8px;" onerror="this.style.display='none';">
+                <span style="margin-left: 8px;"></span> Programs
+            </div>
+            <div class="start-menu-item" data-action="documents">
+                <img src="documents.png" alt="Documents" style="width: 16px; height: 16px; margin-right: 8px;" onerror="this.style.display='none';">
+                <span style="margin-left: 8px;"></span> Documents
+            </div>
+            <div class="start-menu-item" data-action="settings">
+                <img src="settings.png" alt="Settings" style="width: 16px; height: 16px; margin-right: 8px;" onerror="this.style.display='none';">
+                <span style="margin-left: 8px;"></span> Settings
+            </div>
+            <div class="start-menu-separator"></div>
+            <div class="start-menu-item" data-action="terminal">
+                <img src="terminal.png" alt="Terminal" style="width: 16px; height: 16px; margin-right: 8px;" onerror="this.style.display='none';">
+                <span style="margin-left: 8px;"></span> NEXUS Terminal
+            </div>
+            <div class="start-menu-separator"></div>
+            <div class="start-menu-item" data-action="shutdown">
+                <img src="shutdown.png" alt="Shut Down" style="width: 16px; height: 16px; margin-right: 8px;" onerror="this.style.display='none';">
+                <span style="margin-left: 8px;"></span> Shut Down...
+            </div>
+        </div>
+    </div>
+
+    <!-- Terminal Window -->
+    <div class="terminal-window" id="terminal-window">
+        <div class="window-title-bar" id="title-bar">
+            <div class="window-title">
+                <img src="terminal.png" alt="Terminal" style="width: 16px; height: 16px; margin-right: 4px;" onerror="this.style.display='none';">
+                <span style="margin-right: 4px;">💻</span>NEXUS Terminal v2.1.7
+            </div>
+            <div class="window-controls">
+                <div class="window-control" id="minimize-btn">_</div>
+                <div class="window-control" id="maximize-btn">□</div>
+                <div class="window-control" id="close-btn">×</div>
+            </div>
+        </div>
+        
+        <div class="terminal-content-wrapper">
+            <canvas id="matrix-bg"></canvas>
+            
+            <div class="terminal-header">
+                <div class="terminal-title">NEXUS Operating System v2.1.7</div>
+                <div class="system-status">
+                    <div class="status-item">CPU: <span id="cpu">34%</span></div>
+                    <div class="status-item">MEM: <span id="memory">2.1GB</span></div>
+                    <div class="status-item">NET: <span id="network">SECURE</span></div>
+                </div>
+            </div>
+            
+            <div class="terminal-body">
+                <div class="terminal-content" id="terminal-content">
+                    <div class="output-line">NEXUS Operating System v2.1.7</div>
+                    <div class="output-line">Copyright (c) 2157 Nexus Corp. All rights reserved.</div>
+                    <div class="output-line">Unauthorized access is punishable by neural reconditioning.</div>
+                    <div class="output-line"></div>
+                    <div class="output-line success">Connection established... Quantum encryption active.</div>
+                    <div class="output-line">System integrity: OPTIMAL</div>
+                    <div class="output-line">Neural interface: READY</div>
+                    <div class="output-line"></div>
+                    <div class="output-line info">Type 'help' for available commands or 'puzzle' to start the challenge.</div>
+                    <div class="output-line"></div>
+                    
+                    <div class="input-line">
+                        <span class="prompt">nexus@matrix:~$</span>
+                        <input type="text" id="command-input" autocomplete="off" spellcheck="false">
+                        <span class="cursor"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Clock
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            document.getElementById('clock').textContent = timeString;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Start Menu
+        const startButton = document.getElementById('start-button');
+        const startMenu = document.getElementById('start-menu');
+        let startMenuOpen = false;
+
+        startButton.addEventListener('click', function(e) {
+            e.stopPropagation();
+            startMenuOpen = !startMenuOpen;
+            startMenu.style.display = startMenuOpen ? 'block' : 'none';
+            startButton.classList.toggle('pressed', startMenuOpen);
+        });
+
+        // Close start menu when clicking elsewhere
+        document.addEventListener('click', function() {
+            if (startMenuOpen) {
+                startMenu.style.display = 'none';
+                startButton.classList.remove('pressed');
+                startMenuOpen = false;
+            }
+        });
+
+        // Start Menu Items
+        document.querySelectorAll('.start-menu-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const action = this.dataset.action;
+                
+                switch(action) {
+                    case 'terminal':
+                        openTerminal();
+                        break;
+                    case 'shutdown':
+                        if (confirm('Are you sure you want to shut down Windows?')) {
+                            document.body.style.background = '#000';
+                            document.querySelector('.desktop').innerHTML = '<div style="color: white; text-align: center; padding-top: 200px; font-size: 24px;">It\'s now safe to turn off your computer.</div>';
+                        }
+                        break;
+                    default:
+                        alert(`${action.charAt(0).toUpperCase() + action.slice(1)} functionality not implemented in this demo.`);
+                }
+                
+                // Close start menu
+                startMenu.style.display = 'none';
+                startButton.classList.remove('pressed');
+                startMenuOpen = false;
+            });
+        });
+
+        // Terminal Window Management
+        const terminalWindow = document.getElementById('terminal-window');
+        const terminalTaskbarItem = document.getElementById('terminal-taskbar-item');
+        const titleBar = document.getElementById('title-bar');
+        const minimizeBtn = document.getElementById('minimize-btn');
+        const maximizeBtn = document.getElementById('maximize-btn');
+        const closeBtn = document.getElementById('close-btn');
+        const commandInput = document.getElementById('command-input');
+
+        let isMaximized = false;
+        let isDragging = false;
+        let dragOffset = { x: 0, y: 0 };
+
+        function openTerminal() {
+            terminalWindow.style.display = 'flex';
+            terminalTaskbarItem.classList.add('active');
+            commandInput.focus();
+            initializeMatrix();
+        }
+
+        function closeTerminal() {
+            terminalWindow.style.display = 'none';
+            terminalTaskbarItem.classList.remove('active');
+        }
+
+        function minimizeTerminal() {
+            terminalWindow.style.display = 'none';
+        }
+
+        function restoreTerminal() {
+            terminalWindow.style.display = 'flex';
+            commandInput.focus();
+        }
+
+        function maximizeTerminal() {
+            isMaximized = !isMaximized;
+            terminalWindow.classList.toggle('maximized', isMaximized);
+            maximizeBtn.textContent = isMaximized ? '❐' : '□';
+        }
+
+        // Window Controls
+        closeBtn.addEventListener('click', closeTerminal);
+        minimizeBtn.addEventListener('click', minimizeTerminal);
+        maximizeBtn.addEventListener('click', maximizeTerminal);
+
+        // Taskbar item click
+        terminalTaskbarItem.addEventListener('click', function() {
+            if (terminalWindow.style.display === 'none') {
+                restoreTerminal();
+            } else {
+                minimizeTerminal();
+            }
+        });
+
+        // Window Dragging
+        titleBar.addEventListener('mousedown', function(e) {
+            if (isMaximized) return;
+            isDragging = true;
+            dragOffset.x = e.clientX - terminalWindow.offsetLeft;
+            dragOffset.y = e.clientY - terminalWindow.offsetTop;
+            document.addEventListener('mousemove', dragWindow);
+            document.addEventListener('mouseup', stopDragging);
+        });
+
+        function dragWindow(e) {
+            if (!isDragging) return;
+            terminalWindow.style.left = (e.clientX - dragOffset.x) + 'px';
+            terminalWindow.style.top = (e.clientY - dragOffset.y) + 'px';
+        }
+
+        function stopDragging() {
+            isDragging = false;
+            document.removeEventListener('mousemove', dragWindow);
+            document.removeEventListener('mouseup', stopDragging);
+        }
+
+        // Desktop Icons
+        document.querySelectorAll('.desktop-icon').forEach(icon => {
+            icon.addEventListener('click', function() {
+                // Remove selection from all icons
+                document.querySelectorAll('.desktop-icon').forEach(i => i.classList.remove('selected'));
+                // Select this icon
+                this.classList.add('selected');
+            });
+
+            icon.addEventListener('dblclick', function() {
+                const iconType = this.dataset.icon;
+                switch(iconType) {
+                    case 'my-computer':
+                        alert('My Computer would open here in a real Windows 98 system.');
+                        break;
+                    case 'recycle-bin':
+                        alert('Recycle Bin is empty.');
+                        break;
+                    case 'network':
+                        alert('Network Neighborhood would open here.');
+                        break;
+                }
+            });
+        });
+
+        // Click desktop to deselect icons
+        document.getElementById('desktop').addEventListener('click', function(e) {
+            if (e.target === this) {
+                document.querySelectorAll('.desktop-icon').forEach(i => i.classList.remove('selected'));
+            }
+        });
+
+        // Matrix rain effect
+        let canvas, ctx;
+
+        function initializeMatrix() {
+            canvas = document.getElementById('matrix-bg');
+            ctx = canvas.getContext('2d');
+
+            function resizeCanvas() {
+                canvas.width = terminalWindow.querySelector('.terminal-content-wrapper').offsetWidth;
+                canvas.height = terminalWindow.querySelector('.terminal-content-wrapper').offsetHeight;
+            }
+
+            resizeCanvas();
+            
+            const katakana = 'アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン';
+            const latin = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const nums = '0123456789';
+            const alphabet = katakana + latin + nums;
+
+            const fontSize = 16;
+            const columns = canvas.width / fontSize;
+            const rainDrops = [];
+
+            for (let x = 0; x < columns; x++) {
+                rainDrops[x] = 1;
+            }
+
+            function draw() {
+                if (terminalWindow.style.display === 'none') return;
+                
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.fillStyle = '#0F3';
+                ctx.font = fontSize + 'px Source Code Pro';
+
+                for (let i = 0; i < rainDrops.length; i++) {
+                    const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+                    ctx.fillText(text, i * fontSize, rainDrops[i] * fontSize);
+
+                    if (rainDrops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                        rainDrops[i] = 0;
+                    }
+                    rainDrops[i]++;
+                }
+            }
+
+            setInterval(draw, 30);
+            
+            // Resize canvas when window is resized/maximized
+            new ResizeObserver(resizeCanvas).observe(terminalWindow.querySelector('.terminal-content-wrapper'));
+        }
+
+        // Terminal functionality (same as before)
+        const terminal = document.getElementById('terminal-content');
+        let commandHistory = [];
+        let historyIndex = -1;
+        let puzzleActive = false;
+        let currentPuzzle = null;
+
+        // System status animation
+        function updateSystemStats() {
+            document.getElementById('cpu').textContent = (Math.random() * 60 + 20).toFixed(0) + '%';
+            document.getElementById('memory').textContent = (Math.random() * 2 + 1.5).toFixed(1) + 'GB';
+            const netStatus = ['SECURE', 'MONITORING', 'ENCRYPTED'][Math.floor(Math.random() * 3)];
+            document.getElementById('network').textContent = netStatus;
+        }
+        setInterval(updateSystemStats, 3000);
+
+        // ==================== PUZZLE SYSTEM ====================
+        const puzzles = {
+            cipher: {
+                question: "DECODE THE MESSAGE: 'WKH PDWULB KDV BRX'",
+                hint: "Caesar cipher with shift of 3",
+                answer: "the matrix has you",
+                solved: false
+            },
+            sequence: {
+                question: "COMPLETE THE SEQUENCE: 1, 1, 2, 3, 5, 8, ?",
+                hint: "Each number is the sum of the two preceding ones",
+                answer: "13",
+                solved: false
+            },
+            binary: {
+                question: "CONVERT TO ASCII: 01001000 01100101 01101100 01110000",
+                hint: "Binary to text conversion",
+                answer: "help",
+                solved: false
+            },
+            riddle: {
+                question: "I am not alive, but I grow. I don't have lungs, but I need air. I don't have a mouth, but water kills me. What am I?",
+                hint: "Think about something that consumes fuel",
+                answer: "fire",
+                solved: false
+            }
+        };
+
+        function startPuzzle(puzzleKey) {
+            if (!puzzles[puzzleKey]) {
+                typeText("error", "Puzzle not found. Available: " + Object.keys(puzzles).join(", "));
+                return;
+            }
+
+            if (puzzles[puzzleKey].solved) {
+                typeText("warning", "This puzzle has already been solved!");
+                return;
+            }
+
+            currentPuzzle = puzzleKey;
+            puzzleActive = true;
+            
+            typeText("puzzle", "=".repeat(60));
+            typeText("puzzle", "PUZZLE ACTIVATED: " + puzzleKey.toUpperCase());
+            typeText("puzzle", "=".repeat(60));
+            typeText("", "");
+            typeText("puzzle", puzzles[puzzleKey].question);
+            typeText("", "");
+            typeText("info", "Type your answer, 'hint' for a clue, or 'exit' to quit puzzle");
+        }
+
+        function checkPuzzleAnswer(answer) {
+            if (!currentPuzzle) return;
+
+            const puzzle = puzzles[currentPuzzle];
+            
+            if (answer.toLowerCase() === puzzle.answer.toLowerCase()) {
+                puzzle.solved = true;
+                puzzleActive = false;
+                
+                typeText("success", "CORRECT! Puzzle solved!");
+                typeText("success", "Access granted to next level...");
+                
+                // Add special effects
+                setTimeout(() => {
+                    terminalWindow.classList.add('glitch');
+                    setTimeout(() => terminalWindow.classList.remove('glitch'), 300);
+                }, 500);
+                
+                currentPuzzle = null;
+            } else {
+                typeText("error", "Incorrect. Try again or type 'hint' for help.");
+            }
+        }
+
+        function typeText(className, text, callback) {
+            const line = document.createElement('div');
+            line.className = `output-line ${className}`;
+            
+            // Insert before the input line
+            const inputLine = document.querySelector('.input-line');
+            inputLine.parentNode.insertBefore(line, inputLine);
+
+            let i = 0;
+            function type() {
+                if (i < text.length) {
+                    line.textContent += text.charAt(i);
+                    i++;
+                    setTimeout(type, Math.random() * 15 + 5);
+                } else {
+                    if (callback) callback();
+                    scrollToBottom();
+                }
+            }
+            
+            if (text.length > 0) {
+                type();
+            } else {
+                line.textContent = text;
+                scrollToBottom();
+                if (callback) callback();
+            }
+        }
+
+        function scrollToBottom() {
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        function processCommand(command) {
+            const cmd = command.toLowerCase().trim();
+            const args = cmd.split(' ').slice(1);
+
+            // Show the command that was entered
+            if (command.trim()) {
+                typeText("", `nexus@matrix:~$ ${command}`);
+            }
+
+            if (puzzleActive && currentPuzzle) {
+                if (cmd === 'exit') {
+                    puzzleActive = false;
+                    currentPuzzle = null;
+                    typeText("warning", "Puzzle exited.");
+                } else if (cmd === 'hint') {
+                    typeText("info", "HINT: " + puzzles[currentPuzzle].hint);
+                } else {
+                    checkPuzzleAnswer(cmd);
+                }
+                return;
+            }
+
+            switch (cmd.split(' ')[0]) {
+                case 'help':
+                    typeText("info", "Available commands:");
+                    typeText("", "  help          - Show this help");
+                    typeText("", "  clear         - Clear terminal");
+                    typeText("", "  status        - System status");
+                    typeText("", "  puzzle [name] - Start a puzzle (cipher, sequence, binary, riddle)");
+                    typeText("", "  puzzles       - List all puzzles");
+                    typeText("", "  whoami        - Current user info");
+                    typeText("", "  ls            - List files");
+                    typeText("", "  hack          - Initialize hack sequence");
+                    typeText("", "  matrix        - Enter the Matrix");
+                    break;
+
+                case 'clear':
+                    // Clear all output lines but keep the input line
+                    const lines = document.querySelectorAll('.output-line');
+                    lines.forEach(line => line.remove());
+                    break;
+
+                case 'status':
+                    typeText("info", "SYSTEM STATUS:");
+                    typeText("", "CPU Usage: " + (Math.random() * 60 + 20).toFixed(1) + "%");
+                    typeText("", "Memory: " + (Math.random() * 2 + 1.5).toFixed(2) + "GB / 8GB");
+                    typeText("", "Network: QUANTUM ENCRYPTED");
+                    typeText("", "Firewalls: 7 ACTIVE");
+                    typeText("", "Intrusion Detection: ENABLED");
+                    break;
+
+                case 'puzzle':
+                    if (args.length === 0) {
+                        typeText("info", "Usage: puzzle [name]");
+                        typeText("", "Available puzzles: " + Object.keys(puzzles).join(", "));
+                    } else {
+                        startPuzzle(args[0]);
+                    }
+                    break;
+
+                case 'puzzles':
+                    typeText("info", "PUZZLE DATABASE:");
+                    Object.keys(puzzles).forEach(key => {
+                        const status = puzzles[key].solved ? "✓ SOLVED" : "● UNSOLVED";
+                        const color = puzzles[key].solved ? "success" : "warning";
+                        typeText(color, `  ${key.padEnd(10)} - ${status}`);
+                    });
+                    break;
+
+                case 'whoami':
+                    typeText("success", "User: UNKNOWN");
+                    typeText("", "Access Level: RESTRICTED");
+                    typeText("", "Location: CLASSIFIED");
+                    typeText("", "Neural Interface: ACTIVE");
+                    break;
+
+                case 'ls':
+                    typeText("", "classified_files/");
+                    typeText("", "neural_patterns.dat");
+                    typeText("", "reality.matrix");
+                    typeText("", "red_pill.exe");
+                    typeText("", "blue_pill.exe");
+                    typeText("", "trinity.log");
+                    break;
+
+                case 'hack':
+                    typeText("warning", "Initializing hack sequence...");
+                    setTimeout(() => typeText("", "Scanning for vulnerabilities..."), 1000);
+                    setTimeout(() => typeText("success", "Backdoor found in reality.matrix"), 2000);
+                    setTimeout(() => typeText("error", "ACCESS DENIED - ICE detected"), 3000);
+                    setTimeout(() => typeText("warning", "Trace initiated... disconnecting"), 4000);
+                    break;
+
+                case 'matrix':
+                    typeText("puzzle", "Wake up, Neo...");
+                    setTimeout(() => typeText("puzzle", "The Matrix has you..."), 1500);
+                    setTimeout(() => typeText("puzzle", "Follow the white rabbit."), 3000);
+                    break;
+
+                case '':
+                    // Empty command, do nothing
+                    break;
+
+                default:
+                    if (command.trim()) {
+                        typeText("error", `Command not found: ${cmd}`);
+                        typeText("", "Type 'help' for available commands");
+                    }
+            }
+        }
+
+        // Input handling
+        commandInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                const command = this.value;
+                if (command.trim()) {
+                    commandHistory.unshift(command);
+                    if (commandHistory.length > 50) commandHistory.pop();
+                    processCommand(command);
+                }
+                this.value = '';
+                historyIndex = -1;
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (historyIndex < commandHistory.length - 1) {
+                    historyIndex++;
+                    this.value = commandHistory[historyIndex];
+                }
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (historyIndex > 0) {
+                    historyIndex--;
+                    this.value = commandHistory[historyIndex];
+                } else if (historyIndex === 0) {
+                    historyIndex = -1;
+                    this.value = '';
+                }
+            }
+        });
+
+        // Keep focus on input when terminal is active
+        terminalWindow.addEventListener('click', () => {
+            if (terminalWindow.style.display !== 'none') {
+                commandInput.focus();
+            }
+        });
+    </script>
+</body>
+</html>
