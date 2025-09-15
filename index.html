@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Windows 98 - NEXUS Terminal</title>
+    <title>NEXUS Terminal</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@300;400;500;700&display=swap');
         
@@ -510,7 +510,7 @@
         <div class="window-title-bar" id="title-bar">
             <div class="window-title">
                 <img src="terminal.png" alt="Terminal" style="width: 16px; height: 16px; margin-right: 4px;" onerror="this.style.display='none';">
-                <span style="margin-right: 4px;">💻</span>NEXUS Terminal v2.1.7
+                <span style="margin-right: 4px;"></span>NEXUS Terminal v2.1.7
             </div>
             <div class="window-controls">
                 <div class="window-control" id="minimize-btn">_</div>
@@ -601,7 +601,7 @@
                         }
                         break;
                     default:
-                        alert(`${action.charAt(0).toUpperCase() + action.slice(1)} functionality not implemented in this demo.`);
+                        alert(`${action.charAt(0).toUpperCase() + action.slice(1)} ACCESS DENIED! to strangers`);
                 }
                 
                 // Close start menu
@@ -700,13 +700,13 @@
                 const iconType = this.dataset.icon;
                 switch(iconType) {
                     case 'my-computer':
-                        alert('My Computer would open here in a real Windows 98 system.');
+                        alert('Access denied please contact sajin!');
                         break;
                     case 'recycle-bin':
                         alert('Recycle Bin is empty.');
                         break;
                     case 'network':
-                        alert('Network Neighborhood would open here.');
+                        alert('Na! Na! You are naughty 😈');
                         break;
                 }
             });
@@ -790,31 +790,76 @@
 
         // ==================== PUZZLE SYSTEM ====================
         const puzzles = {
-            cipher: {
-                question: "DECODE THE MESSAGE: 'WKH PDWULB KDV BRX'",
-                hint: "Caesar cipher with shift of 3",
-                answer: "the matrix has you",
+            1: {
+                question: "DECODE THE MESSAGE: 'BRX ZLOO DOZDBV EH PB IULHQG'",
+                hint: "A shifted triangle!",
+                answer: "YOU WILL ALWAYS BE MY FRIEND",
                 solved: false
             },
-            sequence: {
-                question: "COMPLETE THE SEQUENCE: 1, 1, 2, 3, 5, 8, ?",
-                hint: "Each number is the sum of the two preceding ones",
+            2: {
+                question: "1, 1, 2, 3, 5, 8, ?",
+                hint: "You should have learned how to add!",
                 answer: "13",
                 solved: false
             },
-            binary: {
-                question: "CONVERT TO ASCII: 01001000 01100101 01101100 01110000",
-                hint: "Binary to text conversion",
-                answer: "help",
+            3: {
+                question: "FRAQ 1275 GB FNWVA SBE N SERR QEVAX",
+                hint: "hail caesar!",
+                answer: "SEND 1275 TO SAJIN FOR A FREE DRINK",
                 solved: false
             },
-            riddle: {
+            4: {
                 question: "I am not alive, but I grow. I don't have lungs, but I need air. I don't have a mouth, but water kills me. What am I?",
                 hint: "Think about something that consumes fuel",
                 answer: "fire",
                 solved: false
             }
         };
+		        // ===== CHANGE YOUR EMAIL HERE =====
+        const CONTACT_EMAIL = "sajin.geo@gmail.com";  // 👈 Put your email here!
+        // ==================================
+
+        function checkAllPuzzlesSolved() {
+            return Object.values(puzzles).every(puzzle => puzzle.solved);
+        }
+
+        function revealFinalReward() {
+            setTimeout(() => {
+                typeText("", "");
+                typeText("success", "=".repeat(70));
+                typeText("success", "🎉 CONGRATULATIONS! ALL PUZZLES COMPLETED! 🎉");
+                typeText("success", "=".repeat(70));
+                typeText("", "");
+                typeText("puzzle", "NEURAL INTERFACE FULLY SYNCHRONIZED...");
+                typeText("puzzle", "ACCESSING HIDDEN ARCHIVES...");
+                typeText("puzzle", "DECRYPTING FINAL TRANSMISSION...");
+                typeText("", "");
+                typeText("info", "TRANSMISSION DECODED:");
+                typeText("", "");
+                typeText("warning", "┌─────────────────────────────────────────────────┐");
+                typeText("warning", "│  MATRIX ARCHITECT CONTACT PROTOCOL ACTIVATED    │");
+                typeText("warning", "│                                                 │");
+                typeText("warning", `│  EMAIL: ${CONTACT_EMAIL.padEnd(35)}             │`);
+                typeText("warning", "│                                                 │");
+                typeText("warning", "│  \"Congratulations, you've proven your worth.   │");
+                typeText("warning", "│   The Matrix has chosen you. Contact me.\"      │");
+                typeText("warning", "│                                                 │");
+                typeText("warning", "│  - The Architect                                │");
+                typeText("warning", "└─────────────────────────────────────────────────┘");
+                typeText("", "");
+                typeText("success", "MISSION COMPLETE. WELCOME TO THE REAL WORLD.");
+                
+                // Special glitch effect for the final reveal
+                setTimeout(() => {
+                    for (let i = 0; i < 5; i++) {
+                        setTimeout(() => {
+                            terminalWindow.classList.add('glitch');
+                            setTimeout(() => terminalWindow.classList.remove('glitch'), 200);
+                        }, i * 400);
+                    }
+                }, 1000);
+            }, 2000);
+        }
 
         function startPuzzle(puzzleKey) {
             if (!puzzles[puzzleKey]) {
@@ -858,6 +903,11 @@
                 }, 500);
                 
                 currentPuzzle = null;
+
+                // Check if all puzzles are solved
+                if (checkAllPuzzlesSolved()) {
+                    revealFinalReward();
+                }
             } else {
                 typeText("error", "Incorrect. Try again or type 'hint' for help.");
             }
@@ -958,11 +1008,19 @@
 
                 case 'puzzles':
                     typeText("info", "PUZZLE DATABASE:");
+                    let allSolved = true;
                     Object.keys(puzzles).forEach(key => {
                         const status = puzzles[key].solved ? "✓ SOLVED" : "● UNSOLVED";
                         const color = puzzles[key].solved ? "success" : "warning";
                         typeText(color, `  ${key.padEnd(10)} - ${status}`);
+                        if (!puzzles[key].solved) allSolved = false;
                     });
+                    
+                    if (allSolved) {
+                        typeText("", "");
+                        typeText("puzzle", "🎯 ALL PUZZLES COMPLETED! The final revelation awaits...");
+                        typeText("info", "Check above for your reward message!");
+                    }
                     break;
 
                 case 'whoami':
